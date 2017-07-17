@@ -1,32 +1,44 @@
 var request = require('request-promise');
 var mysql = require('promise-mysql');
-var RedditAPI = require('./reddit');
+var RedditAPI = require('./reddit');  ///accessing reddit.js
 
 function getSubreddits() {
-    return request(/* fill in the URL, it's always the same */)
+    return request('https://www.reddit.com/.json')
         .then(response => {
             // Parse response as JSON and store in variable called result
-            var response; // continue this line
+            var response= JSON.parse(response);
 
             // Use .map to return a list of subreddit names (strings) only
-            return response.data.children.map(/* write a function */)
+            return response.data.children.map(function(answer){
+              var subreddit = answer.data.subreddit;
+              return subreddit;
+            })
         });
 }
 
+
 function getPostsForSubreddit(subredditName) {
-    return request(/* fill in the URL, it will be based on subredditName */)
+    return request(`https://www.reddit.com/r/${subredditName}.json?limit=50`)
         .then(
             response => {
+                var response = JSON.parse(response);
                 // Parse the response as JSON and store in variable called result
-                var response; // continue this line
-
-
+               // continue this line
                 return response.data.children
-                    .filter(/* write a function */) // Use .filter to remove self-posts
-                    .map(/* write a function */) // Use .map to return title/url/user objects only
-
+                    .filter(function(answer){
+                      return !answer.data.is_self;
+                      }) // Use .filter to remove self-posts
+                    .map(function(item){
+                      var titleOfPosts = {
+                        title: item.data.title,
+                        url: item.data.url,
+                        user: item.data.author
+                      }
+                      return titleOfPosts;
+                    }); // Use .map to return title/url/user objects only
             }
         );
+
 }
 
 function crawl() {
@@ -34,7 +46,7 @@ function crawl() {
     var connection = mysql.createPool({
         host     : 'localhost',
         user     : 'root',
-        password : '',
+        password : 's8q9l0',
         database: 'reddit',
         connectionLimit: 10
     });
@@ -45,6 +57,13 @@ function crawl() {
     // This object will be used as a dictionary from usernames to user IDs
     var users = {};
 
+    // getSubreddits()
+    // .then(result => {
+    //   console.log(result, "subreddit result")
+    // })
+    // .catch(err =>{
+    //   console.log(err, "ERROR")
+    // })
     /*
     Crawling will go as follows:
 
@@ -61,11 +80,14 @@ function crawl() {
     // Get a list of subreddits
     getSubreddits()
         .then(subredditNames => {
-            subredditNames.forEach(subredditName => {
+            subredditNames.forEach((subredditName, index) => {
+				// console.log(subredditName + " with the index " + index + "and it's a " + typeof subredditName)
                 var subId;
                 myReddit.createSubreddit({name: subredditName})
                     .then(subredditId => {
+						console.log(subredditId + 'after creation');
                         subId = subredditId;
+						// console.log(subId);
                         return getPostsForSubreddit(subredditName)
                     })
                     .then(posts => {
@@ -98,3 +120,4 @@ function crawl() {
             });
         });
 }
+crawl();
