@@ -33,6 +33,9 @@ class RedditAPI {
     }
 //This function creates posts with the user id, title ,subreddit id and url that the  user inputs
     createPost(post) {
+        if(!post.subredditId){
+          return Promise.reject(new Error("There is no subreddit id"));
+        }
         return this.conn.query(
             `
             INSERT INTO posts (userId, title, subredditId, url, createdAt, updatedAt)
@@ -41,27 +44,26 @@ class RedditAPI {
         )
         .then(result => {
             return result.insertId;
-        })
+        });
         .catch(error => {
             throw error;
-          });
+        });
     }
 //This functions returns the posts with associated info about the post, the user, the subreddit to which the post belongs and associated votes
     getAllPosts() {
-        return this.conn.query(
+        return this.conn.query(//order by posts.createdAt DESC?
             `
             SELECT
-              posts.id,title,url,posts.userId, subredditId, posts.createdAt AS postCreatedAt,posts.updatedAt AS postUpdatedAt,
+              posts.id,posts.title,posts.url,posts.userId, subredditId, posts.createdAt AS postCreatedAt,posts.updatedAt AS postUpdatedAt,
               users.username,users.createdAt,users.updatedAt,
               subreddits.name,subreddits.description,subreddits.createdAt as subredditsCreatedAt,subreddits.updatedAt as subredditUpdatedAt,
-              SUM(votes.voteDirection) AS voteScore
+              COALESCE(SUM(votes.voteDirection)) AS voteScore,
+              SUM(IF(votes.voteDirection = 1, 1, 0)) AS numUpvotes,
+              SUM(IF(votes.voteDirection = -1, 1, 0)) AS numDownvotes
             FROM posts
-            JOIN users
-            ON posts.userId = users.id
-            JOIN subreddits
-            ON posts.subredditId = subreddits.id
-            LEFT JOIN votes
-            ON posts.id = votes.postId
+              JOIN users ON posts.userId = users.id
+              JOIN subreddits ON posts.subredditId = subreddits.id
+              LEFT JOIN votes ON posts.id = votes.postId
             GROUP BY posts.id
             ORDER BY voteScore DESC
             LIMIT 25`
@@ -91,7 +93,6 @@ class RedditAPI {
             }
             return postsInfo;
           })
-
           return formattedResult;
         });
     }
@@ -141,70 +142,46 @@ class RedditAPI {
       }
 
     }
+  }
     //this function takes the users comments and inputs into the comments table.
-    createComment(comment){
-      return this.conn.query('INSERT INTO comments SET createdAt=NOW(), updatedAt=NOW(), userId =?, postId=?, parentId=?, text =?',
-      [comment.userId,comment.postId,comment.parentId,comment.text]
-    ).then(result =>{
-      if(!comment.parentId){
-        comment.parentId === null;
-      }
-      return result.insertId;
-      }
-    ).catch(error => {
-      throw error;
-      });
-    }
+    // createComment(comment){
+    //   return this.conn.query('INSERT INTO comments SET createdAt=NOW(), updatedAt=NOW(), userId =?, postId=?, parentId=?, text =?',
+    //   [comment.userId,comment.postId,comment.parentId,comment.text]
+    // ).then(result =>{
+    //   if(!comment.parentId){
+    //     comment.parentId === null;
+    //   }
+    //   return result.insertId;
+    //   }
+    // ).catch(error => {
+    //   throw error;
+    //   });
+    // }
 
-    getCommentsForPosts(postId,levels){
-      return this.conn.query(`
-        SELECT comments.id, comments.postId, comments.parentId, comments.userId, comments.text, comments.createdAt, comments.updatedAt
-        FROM comments
-        WHERE parentId IS NULL
-        `).then(function(result){
-          var formattedResult = result.map(function(item){
-              var commentsInfo ={
-                userId: item.userId,
-                text: item.text,
-                createdAt: item.createdAt,
-                updatedAt: item.updatedAt,
-                replies: {
-                  // userId: item.userId,
-                  // text: item.text,
-                  // createdAt: item.createdAt,
-                  // updatedAt: item.updatedAt,
-                }
-            }
-            return commentsInfo;
-          })
-        })
-      }
-}
+    // getCommentsForPosts(postId,levels){
+    //   return this.conn.query(`
+    //     SELECT comments.id, comments.postId, comments.parentId, comments.userId, comments.text, comments.createdAt, comments.updatedAt
+    //     FROM comments
+    //     WHERE parentId IS NULL
+    //     `).then(function(result){
+    //       var formattedResult = result.map(function(item){
+    //           var commentsInfo ={
+    //             userId: item.userId,
+    //             text: item.text,
+    //             createdAt: item.createdAt,
+    //             updatedAt: item.updatedAt,
+    //             replies: {
+    //               // userId: item.userId,
+    //               // text: item.text,
+    //               // createdAt: item.createdAt,
+    //               // updatedAt: item.updatedAt,
+    //             }
+    //         }
+    //         return commentsInfo;
+    //       })
+    //     })
+    //   }
+
 
 
 module.exports = RedditAPI;
-
-
-// .then(function(result){
-//   console.log(result, "our query raw result")
-//   if (levels === 0){
-//     levels  ++
-//     var formattedResult = result.map(function(item){
-//       var commentsInfo ={
-//         userId: item.userId,
-//         text: item.text,
-//         createdAt: item.createdAt,
-//         updatedAt: item.updatedAt,
-//         replies: {
-//           // userId: item.userId,
-//           // text: item.text,
-//           // createdAt: item.createdAt,
-//           // updatedAt: item.updatedAt,
-//         },
-//     }
-//
-//   })
-//   return getCommentsForPosts();
-// }
-// })
-// }

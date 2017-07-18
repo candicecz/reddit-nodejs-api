@@ -1,7 +1,10 @@
 extends layout.pug
 block content
-  each post in posts
-    ul
-      li=post.title
-      li=post.url
-      li=post.user.username
+  div#posts
+    h1 List of Posts
+    ul.post-list
+      each post in posts
+        li
+          h2= post.title
+          h6= post.url
+          h6= post.user.username
