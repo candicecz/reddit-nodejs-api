@@ -48,15 +48,6 @@ class RedditAPI {
     }
 //This functions returns the posts with associated info about the post, the user, the subreddit to which the post belongs and associated votes
     getAllPosts() {
-        /*
-        strings delimited with ` are an ES2015 feature called "template strings".
-        they are more powerful than what we are using them for here. one feature of
-        template strings is that you can write them on multiple lines. if you try to
-        skip a line in a single- or double-quoted string, you would get a syntax error.
-
-        therefore template strings make it very easy to write SQL queries that span multiple
-        lines without having to manually split the string line by line.
-         */
         return this.conn.query(
             `
             SELECT
@@ -71,7 +62,7 @@ class RedditAPI {
             ON posts.subredditId = subreddits.id
             LEFT JOIN votes
             ON posts.id = votes.postId
-            GROUP BY postId
+            GROUP BY posts.id
             ORDER BY voteScore DESC
             LIMIT 25`
         ).then(function(result){

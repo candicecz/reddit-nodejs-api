@@ -3,7 +3,7 @@ require('dotenv').config()
 // load the mysql library
 var mysql = require('promise-mysql');
 
-// create a connection to our Cloud9 server
+// create a connection to our server
 var connection = mysql.createPool({
     host     : 'localhost',
     user     : 'root', // CHANGE THIS :)
@@ -80,7 +80,7 @@ var myReddit = new RedditAPI(connection);
 // });
 //This function with get the comments for a given postId
 
-myReddit.getCommentsForPosts(1)
-.then(function(){
-  connection.end()
-});
+// myReddit.getCommentsForPosts(1)
+// .then(function(){
+//   connection.end()
+// });

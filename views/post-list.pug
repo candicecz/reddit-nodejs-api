@@ -1,0 +1,7 @@
+extends layout.pug
+block content
+  each post in posts
+    ul
+      li=post.title
+      li=post.url
+      li=post.user.username
