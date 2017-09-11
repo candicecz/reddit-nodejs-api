@@ -13,7 +13,7 @@ var RedditAPI = require('./reddit');
 var connection = mysql.createPool({
     host     : 'localhost',
     user     : 'root',
-    password : 's8q9l0',
+    password : '',
     database: 'reddit',
     connectionLimit: 10
 });
@@ -66,7 +66,7 @@ app.get('/calculator/:operation', (req,res) => {
       firstOperand: num1,
       secondOperand: num2,
       solution: op === 'add' ? num1 + num2 : num1 * num2
-    };
+    }
     res.json(calculationObj);
 });
 
@@ -74,8 +74,10 @@ app.get('/calculator/:operation', (req,res) => {
 //makes  a request to db, iterate over the result and builds html, send html to client
 app.get('/posts', function(req,res){
   myReddit.getAllPosts()
-  .then(posts => {
-    res.render('post-list', {posts: posts});
+  .then(function(posts){
+    res.render('post-list', {posts: posts})
+  });
+});
   // var htmlString =`<!doctype.html>
   //   <h1Testing our posts</h1>
   //   <ul>
@@ -96,10 +98,7 @@ app.get('/posts', function(req,res){
   // var postHtmlString=  htmlString + `/<ul>`
   //   res.send(postHtmlString)
   //  });
-  }).catch(err => {
-  res.status(500).send(err.stack);
-  })
-});
+
 
 //create post functionality
 app.get('/new-post',function(req,res){

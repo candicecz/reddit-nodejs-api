@@ -45,9 +45,9 @@ class RedditAPI {
         .then(result => {
             return result.insertId;
         });
-        .catch(error => {
-            throw error;
-        });
+        // .catch(error => {
+        //     throw error;
+        // });
     }
 //This functions returns the posts with associated info about the post, the user, the subreddit to which the post belongs and associated votes
     getAllPosts() {
